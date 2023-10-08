@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earth and Moon Revolving Around the Sun</title>
+</head>
+<body>
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.127.0/build/three.module.js';
+        import { OrbitControls } from 'https://unpkg.com/three@0.127.0/examples/jsm/controls/OrbitControls.js';
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Create a space background
+        const spaceTexture = new THREE.TextureLoader().load('./space.jpg');
+        scene.background = spaceTexture;
+
+        // Create a sphere for the Sun
+        const geometrySun = new THREE.SphereGeometry(15, 50, 50);
+        const materialSun = new THREE.MeshBasicMaterial({
+            map: new THREE.TextureLoader().load('./sun_texture.jpg'),
+        });
+        const sun = new THREE.Mesh(geometrySun, materialSun);
+        scene.add(sun);
+
+        // Create a sphere for Earth
+        const geometryEarth = new THREE.SphereGeometry(1, 50, 50);
+        const materialEarth = new THREE.MeshBasicMaterial({
+            map: new THREE.TextureLoader().load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg'),
+            side: THREE.DoubleSide
+        });
+        const earth = new THREE.Mesh(geometryEarth, materialEarth);
+        scene.add(earth);
+
+        // Create a sphere for the Moon
+        const geometryMoon = new THREE.SphereGeometry(0.25, 50, 50);
+        const materialMoon = new THREE.MeshBasicMaterial({
+            map: new THREE.TextureLoader().load('https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/moon_1024.jpg'),
+            side: THREE.DoubleSide
+        });
+        const moon = new THREE.Mesh(geometryMoon, materialMoon);
+        scene.add(moon);
+
+        // Set up Moon's initial position relative to Earth
+        const moonOrbitRadius = 4; // Increase the Moon's distance from Earth
+        let moonOrbitAngle = 0;
+        moon.position.set(
+            earth.position.x + Math.cos(moonOrbitAngle) * moonOrbitRadius,
+            0,
+            earth.position.z + Math.sin(moonOrbitAngle) * moonOrbitRadius
+        );
+
+        // Set up OrbitControls for camera movement
+        const controls = new OrbitControls(camera, renderer.domElement);
+
+        // Position the camera to focus on the Sun
+        camera.position.set(0, 0, 50); // Adjust the camera position to focus on the Sun
+        controls.target = new THREE.Vector3(0, 0, 0); // Set the camera's target to the center (Sun)
+
+        // Define rotation speed for Earth (to make it revolve around the Sun)
+        const earthRevolutionSpeed = 0.001;
+        const moonRevolutionSpeed = 0.002; // Adjust the Moon's rotation speed
+        const moonOrbitSpeed = 0.008; // Adjust the Moon's orbit speed (smaller value for slower revolution)
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Earth's revolution around the Sun
+            earth.position.x = 30 * Math.cos(earth.rotation.y + Math.PI / 2);
+            earth.position.z = 30 * Math.sin(earth.rotation.y + Math.PI / 2);
+            earth.rotation.y += earthRevolutionSpeed;
+
+            // Moon's self-rotation
+            moon.rotation.y += moonRevolutionSpeed;
+
+            // Update Moon's position to maintain its orbit
+            moonOrbitAngle += moonOrbitSpeed;
+            moon.position.set(
+                earth.position.x + Math.cos(moonOrbitAngle) * moonOrbitRadius,
+                0,
+                earth.position.z + Math.sin(moonOrbitAngle) * moonOrbitRadius
+            );
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+</html>
